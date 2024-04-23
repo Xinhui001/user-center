@@ -58,6 +58,16 @@ public class UserController {
         return userService.userLogin(userAccount,userPassword,request);
     }
 
+    @PostMapping("/logout")
+    public Integer userLogout(HttpServletRequest request){
+
+        if (request == null) {
+            return null;
+        }
+
+        return userService.userLogout(request);
+    }
+
     @GetMapping("/current")
     public User currentUser(HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
