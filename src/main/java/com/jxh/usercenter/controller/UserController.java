@@ -58,6 +58,18 @@ public class UserController {
         return userService.userLogin(userAccount,userPassword,request);
     }
 
+    @GetMapping("/current")
+    public User currentUser(HttpServletRequest request) {
+        User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (user == null) {
+            return null;
+        }
+        //TODO 校验用户是否合法
+        long userId = user.getId();
+        User newUser = userService.getById(userId);
+        return userService.getSafetyUser(newUser);
+    }
+
     @GetMapping("/search")
     public List<User> searchUsers(String username,HttpServletRequest servletRequest) {
         if (!isAdmin(servletRequest)){
