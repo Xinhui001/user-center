@@ -2,6 +2,8 @@ package com.jxh.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jxh.usercenter.common.ErrorCode;
+import com.jxh.usercenter.exception.BusinessException;
 import com.jxh.usercenter.model.domain.User;
 import com.jxh.usercenter.service.UserService;
 import com.jxh.usercenter.mapper.UserMapper;
@@ -49,33 +51,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         //账户、密码、校验码不为空
         if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)) {
-            //TODO
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
         //账户长度不小于4
         if (userAccount.length() < 4) {
-            return -2;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户长度不小于4");
         }
         //账户中不得包含特殊字符
         String validPattern="[ _`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]|\\n|\\r|\\t";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (matcher.find()) {
-            return -3;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户中不得包含特殊字符");
         }
         //密码和校验码不小于8
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            return -4;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码和校验码不小于8");
         }
         //密码和校验码要相同
         if (!userPassword.equals(checkPassword)) {
-            return -5;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码和校验码要相同");
         }
         //账户不可重复
         QueryWrapper<User> queryWrapper = new QueryWrapper();
         queryWrapper.eq("userAccount", userAccount);
         Long selectCount = userMapper.selectCount(queryWrapper);
         if (selectCount > 0) {
-            return -6;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户不可重复");
         }
 
         //对密码加密
@@ -88,7 +89,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(safetyPassword);
         int saveResult = userMapper.insert(user);
         if (saveResult < 0) {
-            return -7;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"存入数据库失败");
         }
 
         return user.getId();
@@ -107,22 +108,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         //账户、密码、校验码不为空
         if (StringUtils.isAnyBlank(userAccount,userPassword)) {
-            //TODO
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
         //账户长度不小于4
         if (userAccount.length() < 4) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户长度不小于4");
         }
         //账户中不得包含特殊字符
         String validPattern="[ _`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]|\\n|\\r|\\t";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (matcher.find()) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户中不得包含特殊字符");
         }
         //密码和校验码不小于8
         if (userPassword.length() < 8) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码和校验码不小于8");
         }
         String encodePassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
@@ -131,7 +131,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = userMapper.selectOne(userQueryWrapper);
         if (user == null) {
             log.info("user login failed,userAccount cannot match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户不存在");
         }
         //脱敏用户信息
         User safetyUser = getSafetyUser(user);
@@ -152,7 +152,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public User getSafetyUser(User user){
 
         if (user == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
 
         User safetyUser = new User();

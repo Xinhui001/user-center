@@ -2,8 +2,10 @@ package com.jxh.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jxh.usercenter.common.BaseResponse;
+import com.jxh.usercenter.common.ErrorCode;
 import com.jxh.usercenter.common.ResultUtils;
 import com.jxh.usercenter.constant.UserConstant;
+import com.jxh.usercenter.exception.BusinessException;
 import com.jxh.usercenter.model.domain.User;
 import com.jxh.usercenter.model.request.UserLoginRequest;
 import com.jxh.usercenter.model.request.UserRegisterRequest;
@@ -32,14 +34,14 @@ public class UserController {
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
 
         if (userRegisterRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
 
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
 
@@ -50,13 +52,13 @@ public class UserController {
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
 
         if (userLoginRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
 
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.userLogin(userAccount, userPassword, request);
 
@@ -67,7 +69,7 @@ public class UserController {
     public BaseResponse<Integer> userLogout(HttpServletRequest request) {
 
         if (request == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         int result = userService.userLogout(request);
 
@@ -78,7 +80,7 @@ public class UserController {
     public BaseResponse<User> currentUser(HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (user == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         //TODO 校验用户是否合法
         long userId = user.getId();
@@ -91,7 +93,7 @@ public class UserController {
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUsers(String username, HttpServletRequest servletRequest) {
         if (!isAdmin(servletRequest)) {
-            return null;
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         if (StringUtils.isNotBlank(username)) {
@@ -105,10 +107,10 @@ public class UserController {
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest servletRequest) {
         if (!isAdmin(servletRequest)) {
-            return null;
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
         if (id <= 0) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         boolean result = userService.removeById(id);
 
