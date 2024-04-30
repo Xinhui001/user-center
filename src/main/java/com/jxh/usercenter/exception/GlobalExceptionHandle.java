@@ -20,7 +20,7 @@ public class GlobalExceptionHandle {
         log.error("businessException",e);
         return ResultUtils.error(ErrorCode.SYSTEM_ERROR,e.getMessage(),"");
     }
-    @ExceptionHandler(BusinessException.class)
+    @ExceptionHandler(RuntimeException.class)
     public BaseResponse runtimeExceptionHandle(BusinessException e) {
         log.error("runtimeException",e);
         return ResultUtils.error(ErrorCode.SYSTEM_ERROR,e.getMessage(),"");
